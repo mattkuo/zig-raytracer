@@ -33,6 +33,15 @@ pub const Tuple = struct {
         };
     }
 
+    pub fn sub(self: *const Tuple, other: *const Tuple) Tuple {
+        return .{
+            .x = self.x - other.x,
+            .y = self.y - other.y,
+            .z = self.z - other.z,
+            .w = self.w - other.w,
+        };
+    }
+
     pub fn equals(self: *const Tuple, other: *const Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
@@ -88,4 +97,31 @@ test "adding two tuples" {
     const expected: Tuple = .{ .x = 1, .y = 1, .z = 6, .w = 1 };
 
     try std.testing.expectEqual(expected, tuple1.add(&tuple2));
+}
+
+test "subtracting two points" {
+    const tuple1: Tuple = .{ .x = 3, .y = 2, .z = 1, .w = 1 };
+    const tuple2: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 1 };
+    const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 0 };
+
+    try std.testing.expectEqual(expected, tuple1.sub(&tuple2));
+    try std.testing.expect(expected.isVector());
+}
+
+test "subtracting a vector from a point" {
+    const point: Tuple = .{ .x = 3, .y = 2, .z = 1, .w = 1 };
+    const vector: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 0 };
+    const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 1 };
+
+    try std.testing.expectEqual(expected, point.sub(&vector));
+    try std.testing.expect(expected.isPoint());
+}
+
+test "subtracting two vectors" {
+    const vector1: Tuple = .{ .x = 3, .y = 2, .z = 1, .w = 0 };
+    const vector2: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 0 };
+    const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 0 };
+
+    try std.testing.expectEqual(expected, vector1.sub(&vector2));
+    try std.testing.expect(expected.isVector());
 }
