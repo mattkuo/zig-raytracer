@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const epsilon: f32 = 0.00001;
+
 pub const Tuple = struct {
     x: f32,
     y: f32,
@@ -20,6 +22,14 @@ pub const Tuple = struct {
 
     pub fn isVector(self: *const Tuple) bool {
         return self.w == 0.0;
+    }
+
+    pub fn equals(self: *const Tuple, other: *const Tuple) bool {
+        if (@abs(self.x - other.x) > epsilon) return false;
+        if (@abs(self.y - other.y) > epsilon) return false;
+        if (@abs(self.z - other.z) > epsilon) return false;
+        if (@abs(self.w - other.w) > epsilon) return false;
+        return true;
     }
 };
 
@@ -47,8 +57,18 @@ test "a tuple with w=0.0 is a vector" {
     try std.testing.expect(my_vec.isVector());
 }
 
-// test "initPoint() creates tuples with w=1.0" {
-//     const p: Tuple = Tuple.initPoint(4, -4, 3);
+test "initPoint() creates tuples with w=1.0" {
+    const p: Tuple = Tuple.initPoint(4, -4, 3);
+    const expected_point: Tuple = .{ .x = 4, .y = -4, .z = 3, .w = 1.0 };
 
+    try std.testing.expectEqual(p, expected_point);
+    try std.testing.expect(p.equals(&expected_point));
+}
 
-// }
+test "initVector() creates tuples with w=0.0" {
+    const p: Tuple = Tuple.initVector(4, -4, 3);
+    const expected_vector: Tuple = .{ .x = 4, .y = -4, .z = 3, .w = 0.0 };
+
+    try std.testing.expectEqual(p, expected_vector);
+    try std.testing.expect(p.equals(&expected_vector));
+}
