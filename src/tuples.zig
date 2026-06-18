@@ -24,6 +24,15 @@ pub const Tuple = struct {
         return self.w == 0.0;
     }
 
+    pub fn add(self: *const Tuple, other: *const Tuple) Tuple {
+        return .{
+            .x = self.x + other.x,
+            .y = self.y + other.y,
+            .z = self.z + other.z,
+            .w = self.w + other.w,
+        };
+    }
+
     pub fn equals(self: *const Tuple, other: *const Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
@@ -71,4 +80,12 @@ test "initVector() creates tuples with w=0.0" {
 
     try std.testing.expectEqual(p, expected_vector);
     try std.testing.expect(p.equals(&expected_vector));
+}
+
+test "adding two tuples" {
+    const tuple1: Tuple = .{ .x = 3, .y = -2, .z = 5, .w = 1 };
+    const tuple2: Tuple = .{ .x = -2, .y = 3, .z = 1, .w = 0 };
+    const expected: Tuple = .{ .x = 1, .y = 1, .z = 6, .w = 1 };
+
+    try std.testing.expectEqual(expected, tuple1.add(&tuple2));
 }
