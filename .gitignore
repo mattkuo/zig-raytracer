@@ -1,0 +1,14 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+# Zig specific build artifacts and caches
+.zig-cache/
+zig-out/
+zig-pkg/
+
+# Nested cache directories
+**/.zig-cache/
+**/zig-out/
+**/zig-pkg/
