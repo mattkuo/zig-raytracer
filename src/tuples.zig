@@ -68,6 +68,11 @@ pub const Tuple = struct {
             .w = self.w / val,
         };
     }
+
+    pub fn magnitude(self: *const Tuple) f32 {
+        return @sqrt(std.math.pow(f32, self.x, 2) + std.math.pow(f32, self.y, 2) + std.math.pow(f32, self.z, 2));
+    }
+
     pub fn equals(self: *const Tuple, other: *const Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
@@ -186,4 +191,39 @@ test "dividing a tuple by a scalar" {
     const expected: Tuple = .{ .x = 0.5, .y = -1, .z = 1.5, .w = -2 };
 
     try std.testing.expectEqual(expected, a.divide(2));
+}
+
+test "computing the magnitude of vector(1, 0, 0)" {
+    const v: Tuple = Tuple.initVector(1, 0, 0);
+    const expected: f32 = 1.0;
+
+    try std.testing.expectEqual(expected, v.magnitude());
+}
+
+test "computing the magnitude of vector(0, 1, 0)" {
+    const v: Tuple = Tuple.initVector(0, 1, 0);
+    const expected: f32 = 1.0;
+
+    try std.testing.expectEqual(expected, v.magnitude());
+}
+
+test "computing the magnitude of vector(0, 0, 1)" {
+    const v: Tuple = Tuple.initVector(0, 0, 1);
+    const expected: f32 = 1.0;
+
+    try std.testing.expectEqual(expected, v.magnitude());
+}
+
+test "computing the magnitude of vector(1, 2, 3)" {
+    const v: Tuple = Tuple.initVector(1, 2, 3);
+    const expected: f32 = @sqrt(14);
+
+    try std.testing.expectEqual(expected, v.magnitude());
+}
+
+test "computing the magnitude of vector(-1, -2, -3)" {
+    const v: Tuple = Tuple.initVector(-1, -2, -3);
+    const expected: f32 = @sqrt(14);
+
+    try std.testing.expectEqual(expected, v.magnitude());
 }
