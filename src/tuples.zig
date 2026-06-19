@@ -42,6 +42,15 @@ pub const Tuple = struct {
         };
     }
 
+    pub fn negate(self: *const Tuple) Tuple {
+        return .{
+            .x = -self.x,
+            .y = -self.y,
+            .z = -self.z,
+            .w = -self.w,
+        };
+    }
+
     pub fn equals(self: *const Tuple, other: *const Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
@@ -124,4 +133,19 @@ test "subtracting two vectors" {
 
     try std.testing.expectEqual(expected, vector1.sub(&vector2));
     try std.testing.expect(expected.isVector());
+}
+
+test "subtracting a vector from the zero vector" {
+    const zero: Tuple = Tuple.initVector(0, 0, 0);
+    const vec: Tuple = Tuple.initVector(1, -2, 3);
+    const expected: Tuple = .{ .x = -1, .y = 2, .z = -3, .w = 0 };
+
+    try std.testing.expectEqual(expected, zero.sub(&vec));
+}
+
+test "negating a tuple" {
+    const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
+    const expected: Tuple = .{ .x = -1, .y = 2, .z = -3, .w = 4 };
+
+    try std.testing.expectEqual(expected, a.negate());
 }
