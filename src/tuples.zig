@@ -51,6 +51,23 @@ pub const Tuple = struct {
         };
     }
 
+    pub fn multiply(self: *const Tuple, val: f32) Tuple {
+        return .{
+            .x = self.x * val,
+            .y = self.y * val,
+            .z = self.z * val,
+            .w = self.w * val,
+        };
+    }
+
+    pub fn divide(self: *const Tuple, val: f32) Tuple {
+        return .{
+            .x = self.x / val,
+            .y = self.y / val,
+            .z = self.z / val,
+            .w = self.w / val,
+        };
+    }
     pub fn equals(self: *const Tuple, other: *const Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
@@ -148,4 +165,25 @@ test "negating a tuple" {
     const expected: Tuple = .{ .x = -1, .y = 2, .z = -3, .w = 4 };
 
     try std.testing.expectEqual(expected, a.negate());
+}
+
+test "multiplying a tuple by a scalar" {
+    const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
+    const expected: Tuple = .{ .x = 3.5, .y = -7, .z = 10.5, .w = -14 };
+
+    try std.testing.expectEqual(expected, a.multiply(3.5));
+}
+
+test "multiplying a tuple by a fraction" {
+    const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
+    const expected: Tuple = .{ .x = 0.5, .y = -1, .z = 1.5, .w = -2 };
+
+    try std.testing.expectEqual(expected, a.multiply(0.5));
+}
+
+test "dividing a tuple by a scalar" {
+    const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
+    const expected: Tuple = .{ .x = 0.5, .y = -1, .z = 1.5, .w = -2 };
+
+    try std.testing.expectEqual(expected, a.divide(2));
 }
