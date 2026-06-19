@@ -269,7 +269,7 @@ test "normalizing vector(1, 2, 3)" {
 test "the dot product of two tuples" {
     const a: Tuple = Tuple.initVector(1, 2, 3);
     const b: Tuple = Tuple.initVector(2, 3, 4);
-    const expected: f32 = 20;
+    const expected: f32 = 40;
 
     try std.testing.expectEqual(expected, a.dot(&b));
 }
