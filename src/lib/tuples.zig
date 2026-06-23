@@ -2,11 +2,53 @@ const std = @import("std");
 
 const epsilon: f32 = 0.00001;
 
+fn ArithmeticOps(comptime T: type) type {
+    return struct {
+        pub fn add(self: T, other: T) T {
+            var result: T = undefined;
+            inline for (std.meta.fields(T)) |field| {
+                @field(result, field.name) = @field(self, field.name) + @field(other, field.name);
+            }
+            return result;
+        }
+
+        pub fn sub(self: T, other: T) T {
+            var result: T = undefined;
+            inline for (std.meta.fields(T)) |field| {
+                @field(result, field.name) = @field(self, field.name) - @field(other, field.name);
+            }
+            return result;
+        }
+
+        pub fn mul(self: T, factor: f32) T {
+            var result: T = undefined;
+            inline for (std.meta.fields(T)) |field| {
+                @field(result, field.name) = @field(self, field.name) * factor;
+            }
+            return result;
+        }
+
+        pub fn div(self: T, divisor: f32) T {
+            var result: T = undefined;
+            inline for (std.meta.fields(T)) |field| {
+                @field(result, field.name) = @field(self, field.name) / divisor;
+            }
+            return result;
+        }
+    };
+}
+
 pub const Tuple = struct {
     x: f32,
     y: f32,
     z: f32,
     w: f32,
+
+    const Ops = ArithmeticOps(Tuple);
+    pub const add = Ops.add;
+    pub const sub = Ops.sub;
+    pub const mul = Ops.mul;
+    pub const div = Ops.div;
 
     pub fn initPoint(x: f32, y: f32, z: f32) Tuple {
         return Tuple{ .x = x, .y = y, .z = z, .w = 1.0 };
@@ -16,33 +58,15 @@ pub const Tuple = struct {
         return Tuple{ .x = x, .y = y, .z = z, .w = 0.0 };
     }
 
-    pub fn isPoint(self: *const Tuple) bool {
+    pub fn isPoint(self: Tuple) bool {
         return self.w == 1.0;
     }
 
-    pub fn isVector(self: *const Tuple) bool {
+    pub fn isVector(self: Tuple) bool {
         return self.w == 0.0;
     }
 
-    pub fn add(self: *const Tuple, other: *const Tuple) Tuple {
-        return .{
-            .x = self.x + other.x,
-            .y = self.y + other.y,
-            .z = self.z + other.z,
-            .w = self.w + other.w,
-        };
-    }
-
-    pub fn sub(self: *const Tuple, other: *const Tuple) Tuple {
-        return .{
-            .x = self.x - other.x,
-            .y = self.y - other.y,
-            .z = self.z - other.z,
-            .w = self.w - other.w,
-        };
-    }
-
-    pub fn negate(self: *const Tuple) Tuple {
+    pub fn negate(self: Tuple) Tuple {
         return .{
             .x = -self.x,
             .y = -self.y,
@@ -51,29 +75,11 @@ pub const Tuple = struct {
         };
     }
 
-    pub fn multiply(self: *const Tuple, val: f32) Tuple {
-        return .{
-            .x = self.x * val,
-            .y = self.y * val,
-            .z = self.z * val,
-            .w = self.w * val,
-        };
+    pub fn magnitude(self: Tuple) f32 {
+        return @sqrt(self.dot(self));
     }
 
-    pub fn divide(self: *const Tuple, val: f32) Tuple {
-        return .{
-            .x = self.x / val,
-            .y = self.y / val,
-            .z = self.z / val,
-            .w = self.w / val,
-        };
-    }
-
-    pub fn magnitude(self: *const Tuple) f32 {
-        return @sqrt(std.math.pow(f32, self.x, 2) + std.math.pow(f32, self.y, 2) + std.math.pow(f32, self.z, 2));
-    }
-
-    pub fn normalize(self: *const Tuple) Tuple {
+    pub fn normalize(self: Tuple) Tuple {
         const m: f32 = self.magnitude();
 
         return .{
@@ -84,14 +90,14 @@ pub const Tuple = struct {
         };
     }
 
-    pub fn dot(self: *const Tuple, other: *const Tuple) f32 {
+    pub fn dot(self: Tuple, other: Tuple) f32 {
         return self.x * other.x +
             self.y * other.y +
             self.z * other.z +
             self.w * other.w;
     }
 
-    pub fn cross(self: *const Tuple, other: *const Tuple) Tuple {
+    pub fn cross(self: Tuple, other: Tuple) Tuple {
         return Tuple.initVector(self.y * other.z - self.z * other.y,
                                 self.z * other.x - self.x * other.z,
                                 self.x * other.y - self.y * other.x);
@@ -151,7 +157,7 @@ test "adding two tuples" {
     const tuple2: Tuple = .{ .x = -2, .y = 3, .z = 1, .w = 0 };
     const expected: Tuple = .{ .x = 1, .y = 1, .z = 6, .w = 1 };
 
-    try std.testing.expectEqual(expected, tuple1.add(&tuple2));
+    try std.testing.expectEqual(expected, tuple1.add(tuple2));
 }
 
 test "subtracting two points" {
@@ -159,7 +165,7 @@ test "subtracting two points" {
     const tuple2: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 1 };
     const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 0 };
 
-    try std.testing.expectEqual(expected, tuple1.sub(&tuple2));
+    try std.testing.expectEqual(expected, tuple1.sub(tuple2));
     try std.testing.expect(expected.isVector());
 }
 
@@ -168,7 +174,7 @@ test "subtracting a vector from a point" {
     const vector: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 0 };
     const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 1 };
 
-    try std.testing.expectEqual(expected, point.sub(&vector));
+    try std.testing.expectEqual(expected, point.sub(vector));
     try std.testing.expect(expected.isPoint());
 }
 
@@ -177,7 +183,7 @@ test "subtracting two vectors" {
     const vector2: Tuple = .{ .x = 5, .y = 6, .z = 7, .w = 0 };
     const expected: Tuple = .{ .x = -2, .y = -4, .z = -6, .w = 0 };
 
-    try std.testing.expectEqual(expected, vector1.sub(&vector2));
+    try std.testing.expectEqual(expected, vector1.sub(vector2));
     try std.testing.expect(expected.isVector());
 }
 
@@ -186,7 +192,7 @@ test "subtracting a vector from the zero vector" {
     const vec: Tuple = Tuple.initVector(1, -2, 3);
     const expected: Tuple = .{ .x = -1, .y = 2, .z = -3, .w = 0 };
 
-    try std.testing.expectEqual(expected, zero.sub(&vec));
+    try std.testing.expectEqual(expected, zero.sub(vec));
 }
 
 test "negating a tuple" {
@@ -200,21 +206,21 @@ test "multiplying a tuple by a scalar" {
     const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
     const expected: Tuple = .{ .x = 3.5, .y = -7, .z = 10.5, .w = -14 };
 
-    try std.testing.expectEqual(expected, a.multiply(3.5));
+    try std.testing.expectEqual(expected, a.mul(3.5));
 }
 
 test "multiplying a tuple by a fraction" {
     const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
     const expected: Tuple = .{ .x = 0.5, .y = -1, .z = 1.5, .w = -2 };
 
-    try std.testing.expectEqual(expected, a.multiply(0.5));
+    try std.testing.expectEqual(expected, a.mul(0.5));
 }
 
 test "dividing a tuple by a scalar" {
     const a: Tuple = .{ .x = 1, .y = -2, .z = 3, .w = -4 };
     const expected: Tuple = .{ .x = 0.5, .y = -1, .z = 1.5, .w = -2 };
 
-    try std.testing.expectEqual(expected, a.divide(2));
+    try std.testing.expectEqual(expected, a.div(2));
 }
 
 test "computing the magnitude of vector(1, 0, 0)" {
@@ -269,16 +275,15 @@ test "normalizing vector(1, 2, 3)" {
 test "the dot product of two tuples" {
     const a: Tuple = Tuple.initVector(1, 2, 3);
     const b: Tuple = Tuple.initVector(2, 3, 4);
-    const expected: f32 = 40;
+    const expected: f32 = 20;
 
-    try std.testing.expectEqual(expected, a.dot(&b));
+    try std.testing.expectEqual(expected, a.dot(b));
 }
 
 test "the cross product of two vectors" {
     const a: Tuple = Tuple.initVector(1, 2, 3);
     const b: Tuple = Tuple.initVector(2, 3, 4);
 
-    try std.testing.expectEqual(Tuple.initVector(-1, 2, -1), a.cross(&b));
-    try std.testing.expectEqual(Tuple.initVector(1, -2, 1), b.cross(&a));
-
+    try std.testing.expectEqual(Tuple.initVector(-1, 2, -1), a.cross(b));
+    try std.testing.expectEqual(Tuple.initVector(1, -2, 1), b.cross(a));
 }

@@ -33,10 +33,10 @@ pub fn main() !void {
 }
 
 fn tick(env: Environment, projectile: Projectile) Projectile {
-    const pos = projectile.position.add(&projectile.velocity);
+    const pos = projectile.position.add(projectile.velocity);
     const velocity = projectile.velocity
-        .add(&env.gravity)
-        .add(&env.wind);
+        .add(env.gravity)
+        .add(env.wind);
 
     return .{ .position = pos, .velocity = velocity };
 }
