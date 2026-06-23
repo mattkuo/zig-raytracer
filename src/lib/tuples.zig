@@ -38,6 +38,25 @@ fn ArithmeticOps(comptime T: type) type {
     };
 }
 
+pub const Color = struct {
+    r: f32,
+    g: f32,
+    b: f32,
+
+    const Ops = ArithmeticOps(Color);
+    pub const add = Ops.add;
+    pub const sub = Ops.sub;
+    pub const mul = Ops.mul;
+
+    pub fn mul_color(self: Color, other: Color) Color {
+        return .{
+            .r = self.r * other.r,
+            .g = self.g * other.g,
+            .b = self.b * other.b,
+        };
+    }
+};
+
 pub const Tuple = struct {
     x: f32,
     y: f32,
@@ -103,7 +122,7 @@ pub const Tuple = struct {
                                 self.x * other.y - self.y * other.x);
     }
 
-    pub fn equals(self: *const Tuple, other: *const Tuple) bool {
+    pub fn equals(self: Tuple, other: Tuple) bool {
         if (@abs(self.x - other.x) > epsilon) return false;
         if (@abs(self.y - other.y) > epsilon) return false;
         if (@abs(self.z - other.z) > epsilon) return false;
@@ -111,6 +130,13 @@ pub const Tuple = struct {
         return true;
     }
 };
+
+/// Expect fields in expected are approximately equal to those in actual. Used for testing only.
+fn expectApproxEq(comptime T: type, expected: T, actual: T) !void {
+    inline for (std.meta.fields(T)) |field| {
+        try std.testing.expectApproxEqAbs(@field(expected, field.name), @field(actual, field.name), epsilon);
+    }
+}
 
 test "a tuple with w=1.0 is a point" {
     const my_point: Tuple = .{
@@ -141,7 +167,7 @@ test "initPoint() creates tuples with w=1.0" {
     const expected_point: Tuple = .{ .x = 4, .y = -4, .z = 3, .w = 1.0 };
 
     try std.testing.expectEqual(p, expected_point);
-    try std.testing.expect(p.equals(&expected_point));
+    try std.testing.expect(p.equals(expected_point));
 }
 
 test "initVector() creates tuples with w=0.0" {
@@ -149,7 +175,7 @@ test "initVector() creates tuples with w=0.0" {
     const expected_vector: Tuple = .{ .x = 4, .y = -4, .z = 3, .w = 0.0 };
 
     try std.testing.expectEqual(p, expected_vector);
-    try std.testing.expect(p.equals(&expected_vector));
+    try std.testing.expect(p.equals(expected_vector));
 }
 
 test "adding two tuples" {
@@ -269,7 +295,7 @@ test "normalizing vector(1, 2, 3)" {
     const v: Tuple = Tuple.initVector(1, 2, 3);
     const expected: Tuple = Tuple.initVector(0.26726, 0.53452, 0.80178);
 
-    try std.testing.expect(expected.equals(&v.normalize()));
+    try std.testing.expect(expected.equals(v.normalize()));
 }
 
 test "the dot product of two tuples" {
@@ -286,4 +312,35 @@ test "the cross product of two vectors" {
 
     try std.testing.expectEqual(Tuple.initVector(-1, 2, -1), a.cross(b));
     try std.testing.expectEqual(Tuple.initVector(1, -2, 1), b.cross(a));
+}
+
+test "colors are (red, green, blue) tuples" {
+    const c: Color = .{ .r = -0.5, .g = 0.4, .b = 1.7 };
+
+    try std.testing.expectEqual(-0.5, c.r);
+    try std.testing.expectEqual(0.4, c.g);
+    try std.testing.expectEqual(1.7, c.b);
+}
+
+test "adding colors" {
+    const c1: Color = .{ .r = 0.9, .g = 0.6, .b = 0.75 };
+    const c2: Color = .{ .r = 0.7, .g = 0.1, .b = 0.25 };
+    const expected: Color = .{ .r = 1.6, .g = 0.7, .b = 1.0 };
+
+    try expectApproxEq(Color, expected, c1.add(c2));
+}
+
+test "multiplying a color by a scalar" {
+    const c: Color = .{ .r = 0.2, .g = 0.3, .b = 0.4 };
+    const expected: Color = .{ .r = 0.4, .g = 0.6, .b = 0.8 };
+
+    try expectApproxEq(Color, expected, c.mul(2));
+}
+
+test "multiplying colors" {
+    const c1: Color = .{ .r = 1, .g = 0.2, .b = 0.4 };
+    const c2: Color = .{ .r = 0.9, .g = 1, .b = 0.1 };
+    const expected: Color = .{ .r = 0.9, .g = 0.2, .b = 0.04 };
+
+    try expectApproxEq(Color, expected, c1.mul_color(c2));
 }
