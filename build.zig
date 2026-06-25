@@ -12,6 +12,7 @@ pub fn build(b: *std.Build) void {
 
     const executables = [_]struct { name: []const u8, src: []const u8 } {
         .{ .name = "main", .src = "src/bin/main.zig" },
+        .{ .name = "main2", .src = "src/bin/main2.zig" },
     };
 
     for (executables) |exe_info| {
