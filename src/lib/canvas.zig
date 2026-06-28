@@ -1,8 +1,13 @@
 const std = @import("std");
+
 const Color = @import("tuples.zig").Color;
 
 const clamping_value: u32 = 255;
 const ppm_line_len: u32 = 70;
+
+pub const CanvasError = error{
+    OutOfBounds,
+};
 
 pub const Canvas = struct {
 
@@ -27,11 +32,17 @@ pub const Canvas = struct {
         self.allocator.free(self.pixels);
     }
 
-    pub fn write_pixel(self: *Canvas, color: Color, x: usize, y: usize) void {
+    pub fn write_pixel(self: *Canvas, color: Color, x: usize, y: usize) !void {
+        if (x >= self.width or y >= self.height) {
+            return CanvasError.OutOfBounds;
+        }
         self.pixels[y * self.width + x] = color;
     }
 
-    pub fn pixel_at(self: *const Canvas, x: usize, y: usize) Color {
+    pub fn pixel_at(self: *const Canvas, x: usize, y: usize) !Color {
+        if (x >= self.width or y >= self.height) {
+            return CanvasError.OutOfBounds;
+        }
         return self.pixels[y * self.width + x];
     }
 
@@ -49,7 +60,7 @@ pub const Canvas = struct {
             var line_width: usize = 0;
 
             for (0..self.width) |x| {
-                const pixel_color = self.pixel_at(x, y);
+                const pixel_color = try self.pixel_at(x, y);
 
                 inline for (std.meta.fields(Color)) |field| {
                     const clamped = std.math.clamp(@field(pixel_color, field.name), 0.0, 1.0);
@@ -108,7 +119,7 @@ test "writing pixels to canvas" {
     const y: u32 = 3;
     const red: Color = .{ .r = 1, .g = 0, .b = 0 };
 
-    c.write_pixel(red, x, y);
+    try c.write_pixel(red, x, y);
     try std.testing.expectEqual(red, c.pixel_at(x, y));
 }
 
@@ -148,9 +159,9 @@ test "constructing the PPM pixel data" {
         \\0 0 0 0 0 0 0 0 0 0 0 0 0 0 255
     ;
 
-    c.write_pixel(c1, 0, 0);
-    c.write_pixel(c2, 2, 1);
-    c.write_pixel(c3, 4, 2);
+    try c.write_pixel(c1, 0, 0);
+    try c.write_pixel(c2, 2, 1);
+    try c.write_pixel(c3, 4, 2);
 
     const result = try c.to_ppm(allocator);
     defer allocator.free(result);
@@ -187,7 +198,7 @@ test "splitting long lines in PPM files" {
 
     for (0..c.height) |y| {
         for (0..c.width) |x| {
-            c.write_pixel(color, x, y);
+            try c.write_pixel(color, x, y);
         }
     }
 

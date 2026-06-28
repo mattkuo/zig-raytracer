@@ -15,7 +15,6 @@ const Projectile = struct {
 };
 
 pub fn main() !void {
-
     var p = Projectile{
         .position = Tuple.initPoint(0, 1, 0),
         .velocity = Tuple.initVector(1, 1, 0).normalize(),

@@ -46,7 +46,9 @@ pub fn main(init: std.process.Init) !void {
             continue;
         }
 
-        canvas.write_pixel(project_color, new_x, new_y);
+        canvas.write_pixel(project_color, new_x, new_y) catch |err| {
+            std.debug.print("Error: {}\n", .{err});
+        };
     }
 
     const ppm = try canvas.to_ppm(allocator);
