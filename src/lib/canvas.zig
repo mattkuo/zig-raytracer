@@ -10,7 +10,6 @@ pub const CanvasError = error{
 };
 
 pub const Canvas = struct {
-
     width: usize,
     height: usize,
     pixels: []Color,
