@@ -1,9 +1,11 @@
 const std = @import("std");
+const Tuple = @import("tuples.zig").Tuple;
 
 const epsilon: f32 = 0.00001;
 
 pub const MatrixError = error {
     IndexOutOfBounds,
+    IncompatibleBounds,
 };
 
 pub const Matrix = struct {
@@ -38,6 +40,39 @@ pub const Matrix = struct {
         }
 
         return &self.matrix[self.rows * row + col];
+    }
+
+    pub fn mul(self: Matrix, other: Matrix) !Matrix {
+        if (self.cols != other.rows) {
+            return MatrixError.IncompatibleBounds;
+        }
+
+        const result: Matrix = try .init(self.allocator, self.rows, other.cols);
+        for (0..self.rows) |row| {
+            for (0..other.cols) |col| {
+                var sum: f32 = 0;
+                for (0..self.cols) |k| {
+                    sum += self.matrix[row * self.cols + k] * other.matrix[k * other.cols + col];
+                }
+                result.matrix[row * other.cols + col] = sum;
+            }
+        }
+        return result;
+    }
+
+    pub fn mul_tuple(self: Matrix, tuple: Tuple) Tuple {
+        const result: Tuple = .{ .x = 0, .y = 0, .z = 0, .w = 0 };
+        for (0..self.rows) |row| {
+            var sum: f32 = 0;
+            for (0..self.cols) |col| {
+                inline for (std.meta.fields(@TypeOf(tuple))) |field| {
+                    sum += self.matrix[self.rows * row + col] * @field(tuple, field);
+                }
+            }
+            @field(result, std.meta.fields(@TypeOf(tuple))[row]) = sum;
+        }
+
+        return result;
     }
 
     pub fn equals(self: Matrix, other: Matrix) bool {
@@ -164,4 +199,30 @@ test "matrix equality with different matrices" {
     (try m1.at(1, 1)).* = 7;
 
     try std.testing.expect(!m.equals(m1));
+}
+
+test "multiplying two matrices" {
+    const allocator = std.testing.allocator;
+
+    var m: Matrix = try .init(allocator, 2, 2);
+    defer m.deinit();
+    (try m.at(0, 0)).* = 1;
+    (try m.at(0, 1)).* = 2;
+    (try m.at(1, 0)).* = 5;
+    (try m.at(1, 1)).* = 6;
+
+    var m1: Matrix = try .init(allocator, 2, 2);
+    defer m1.deinit();
+    (try m1.at(0, 0)).* = -2;
+    (try m1.at(0, 1)).* = 1;
+    (try m1.at(1, 0)).* = 3;
+    (try m1.at(1, 1)).* = 2;
+
+    var result: Matrix = try m.mul(m1);
+    defer result.deinit();
+
+    try std.testing.expectEqual(4, (try result.at(0, 0)).*);
+    try std.testing.expectEqual(5, (try result.at(0, 1)).*);
+    try std.testing.expectEqual(8, (try result.at(1, 0)).*);
+    try std.testing.expectEqual(17, (try result.at(1, 1)).*);
 }
