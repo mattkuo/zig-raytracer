@@ -33,7 +33,7 @@ fn ArithmeticOps(comptime T: type) type {
         pub fn div(self: T, divisor: f32) T {
             var result: T = undefined;
             inline for (@typeInfo(T).@"struct".field_names) |field_name| {
-                @field(result, field_name) = @field(self, field_name) * divisor;
+                @field(result, field_name) = @field(self, field_name) / divisor;
             }
             return result;
         }
@@ -136,8 +136,8 @@ pub const Tuple = struct {
 
 /// Expect fields in expected are approximately equal to those in actual. Used for testing only.
 fn expectApproxEq(comptime T: type, expected: T, actual: T) !void {
-    inline for (std.meta.fields(T)) |field| {
-        try std.testing.expectApproxEqAbs(@field(expected, field.name), @field(actual, field.name), epsilon);
+    inline for (@typeInfo(T).@"struct".field_names) |field_name| {
+        try std.testing.expectApproxEqAbs(@field(expected, field_name), @field(actual, field_name), epsilon);
     }
 }
 
