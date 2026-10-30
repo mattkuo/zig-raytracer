@@ -4,37 +4,40 @@ const epsilon: f32 = 0.00001;
 
 fn ArithmeticOps(comptime T: type) type {
     return struct {
+
         pub fn add(self: T, other: T) T {
             var result: T = undefined;
-            inline for (std.meta.fields(T)) |field| {
-                @field(result, field.name) = @field(self, field.name) + @field(other, field.name);
+            inline for (@typeInfo(T).@"struct".field_names) |field_name| {
+                @field(result, field_name) = @field(self, field_name) + @field(other, field_name);
             }
+
             return result;
         }
 
         pub fn sub(self: T, other: T) T {
             var result: T = undefined;
-            inline for (std.meta.fields(T)) |field| {
-                @field(result, field.name) = @field(self, field.name) - @field(other, field.name);
+            inline for (@typeInfo(T).@"struct".field_names) |field_name| {
+                @field(result, field_name) = @field(self, field_name) - @field(other, field_name);
             }
             return result;
         }
 
         pub fn mul(self: T, factor: f32) T {
             var result: T = undefined;
-            inline for (std.meta.fields(T)) |field| {
-                @field(result, field.name) = @field(self, field.name) * factor;
+            inline for (@typeInfo(T).@"struct".field_names) |field_name| {
+                @field(result, field_name) = @field(self, field_name) * factor;
             }
             return result;
         }
 
         pub fn div(self: T, divisor: f32) T {
             var result: T = undefined;
-            inline for (std.meta.fields(T)) |field| {
-                @field(result, field.name) = @field(self, field.name) / divisor;
+            inline for (@typeInfo(T).@"struct".field_names) |field_name| {
+                @field(result, field_name) = @field(self, field_name) * divisor;
             }
             return result;
         }
+
     };
 }
 

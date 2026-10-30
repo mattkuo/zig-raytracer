@@ -61,8 +61,8 @@ pub const Canvas = struct {
             for (0..self.width) |x| {
                 const pixel_color = try self.pixel_at(x, y);
 
-                inline for (std.meta.fields(Color)) |field| {
-                    const clamped = std.math.clamp(@field(pixel_color, field.name), 0.0, 1.0);
+                inline for (@typeInfo(Color).@"struct".field_names) |field_name| {
+                    const clamped = std.math.clamp(@field(pixel_color, field_name), 0.0, 1.0);
                     const clamped_val: u32 = @intFromFloat(@round(clamped * 255.0));
 
                     const string_val = try std.fmt.allocPrint(allocator, "{}", .{clamped_val});
