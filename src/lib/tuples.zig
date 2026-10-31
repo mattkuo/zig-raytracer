@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const epsilon: f32 = 0.00001;
+const EPSILON: f32 = 0.00001;
 
 fn ArithmeticOps(comptime T: type) type {
     return struct {
@@ -73,11 +73,15 @@ pub const Tuple = struct {
     pub const div = Ops.div;
 
     pub fn initPoint(x: f32, y: f32, z: f32) Tuple {
-        return Tuple{ .x = x, .y = y, .z = z, .w = 1.0 };
+        return init(x, y, z, 1.0);
     }
 
     pub fn initVector(x: f32, y: f32, z: f32) Tuple {
-        return Tuple{ .x = x, .y = y, .z = z, .w = 0.0 };
+        return init(x, y, z, 0.0);
+    }
+
+    pub fn init(x: f32, y: f32, z: f32, w: f32) Tuple {
+        return Tuple{ .x = x, .y = y, .z = z, .w = w };
     }
 
     pub fn isPoint(self: Tuple) bool {
@@ -126,10 +130,10 @@ pub const Tuple = struct {
     }
 
     pub fn equals(self: Tuple, other: Tuple) bool {
-        if (@abs(self.x - other.x) > epsilon) return false;
-        if (@abs(self.y - other.y) > epsilon) return false;
-        if (@abs(self.z - other.z) > epsilon) return false;
-        if (@abs(self.w - other.w) > epsilon) return false;
+        if (@abs(self.x - other.x) > EPSILON) return false;
+        if (@abs(self.y - other.y) > EPSILON) return false;
+        if (@abs(self.z - other.z) > EPSILON) return false;
+        if (@abs(self.w - other.w) > EPSILON) return false;
         return true;
     }
 };
@@ -137,7 +141,7 @@ pub const Tuple = struct {
 /// Expect fields in expected are approximately equal to those in actual. Used for testing only.
 fn expectApproxEq(comptime T: type, expected: T, actual: T) !void {
     inline for (@typeInfo(T).@"struct".field_names) |field_name| {
-        try std.testing.expectApproxEqAbs(@field(expected, field_name), @field(actual, field_name), epsilon);
+        try std.testing.expectApproxEqAbs(@field(expected, field_name), @field(actual, field_name), EPSILON);
     }
 }
 

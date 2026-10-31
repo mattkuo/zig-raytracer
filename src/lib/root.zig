@@ -4,4 +4,5 @@ pub const canvas = @import("canvas.zig");
 comptime {
     _ = @import("tuples.zig");
     _ = @import("canvas.zig");
+    _ = @import("matrices.zig");
 }
